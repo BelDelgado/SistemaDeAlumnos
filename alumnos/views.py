@@ -5,13 +5,17 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from .models import Alumno
 from .forms import AlumnoForm
-from .utils import generar_pdf_alumno
-import os
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
 
 @login_required
 def dashboard(request):
     alumnos = Alumno.objects.filter(usuario=request.user)
-    return render(request, 'alumnos/dashboard.html', {'alumnos': alumnos})
+    context = {
+        'alumnos': alumnos
+    }
+    return render(request, 'alumnos/dashboard.html', context)
 
 @login_required
 def crear_alumno(request):
@@ -21,12 +25,12 @@ def crear_alumno(request):
             alumno = form.save(commit=False)
             alumno.usuario = request.user
             alumno.save()
-            messages.success(request, f'Alumno {alumno.nombre_completo} creado exitosamente.')
+            messages.success(request, f'Alumno {alumno.nombre_completo} creado exitosamente')
             return redirect('alumnos:dashboard')
     else:
         form = AlumnoForm()
     
-    return render(request, 'alumnos/crear_alumno.html', {'form': form})
+    return render(request, 'alumnos/crear_alumno.html', {'form': form, 'titulo': 'Crear Alumno'})
 
 @login_required
 def editar_alumno(request, pk):
@@ -36,12 +40,12 @@ def editar_alumno(request, pk):
         form = AlumnoForm(request.POST, instance=alumno)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Alumno {alumno.nombre_completo} actualizado exitosamente.')
+            messages.success(request, f'Alumno {alumno.nombre_completo} actualizado exitosamente')
             return redirect('alumnos:dashboard')
     else:
         form = AlumnoForm(instance=alumno)
     
-    return render(request, 'alumnos/editar_alumno.html', {'form': form, 'alumno': alumno})
+    return render(request, 'alumnos/editar_alumno.html', {'form': form, 'titulo': 'Editar Alumno'})
 
 @login_required
 def eliminar_alumno(request, pk):
@@ -50,37 +54,57 @@ def eliminar_alumno(request, pk):
     if request.method == 'POST':
         nombre = alumno.nombre_completo
         alumno.delete()
-        messages.success(request, f'Alumno {nombre} eliminado exitosamente.')
+        messages.success(request, f'Alumno {nombre} eliminado exitosamente')
         return redirect('alumnos:dashboard')
     
     return render(request, 'alumnos/eliminar_alumno.html', {'alumno': alumno})
 
 @login_required
-def enviar_pdf_alumno(request, pk):
+def enviar_pdf(request, pk):
     alumno = get_object_or_404(Alumno, pk=pk, usuario=request.user)
     
+    # Generar PDF
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Título
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(100, height - 100, "Información del Alumno")
+    
+    # Datos del alumno
+    p.setFont("Helvetica", 12)
+    y = height - 150
+    p.drawString(100, y, f"Nombre Completo: {alumno.nombre_completo}")
+    y -= 30
+    p.drawString(100, y, f"Email: {alumno.email}")
+    y -= 30
+    p.drawString(100, y, f"Teléfono: {alumno.telefono}")
+    y -= 30
+    p.drawString(100, y, f"Fecha de Nacimiento: {alumno.fecha_nacimiento}")
+    y -= 30
+    p.drawString(100, y, f"Dirección: {alumno.direccion}")
+    y -= 30
+    p.drawString(100, y, f"Fecha de Registro: {alumno.fecha_registro.strftime('%d/%m/%Y')}")
+    
+    p.showPage()
+    p.save()
+    
+    buffer.seek(0)
+    
+    # Enviar por email
+    email = EmailMessage(
+        f'Información del Alumno: {alumno.nombre_completo}',
+        f'Adjunto encontrarás la información del alumno {alumno.nombre_completo}.',
+        settings.DEFAULT_FROM_EMAIL,
+        [request.user.email if request.user.email else alumno.email],
+    )
+    email.attach(f'alumno_{alumno.nombre}_{alumno.apellido}.pdf', buffer.getvalue(), 'application/pdf')
+    
     try:
-        # Generar PDF
-        pdf_path = generar_pdf_alumno(alumno)
-        
-        # Enviar por email
-        email = EmailMessage(
-            subject=f'Datos del Alumno: {alumno.nombre_completo}',
-            body=f'Adjunto encontrarás el PDF con los datos del alumno {alumno.nombre_completo}.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[request.user.email],
-        )
-        
-        with open(pdf_path, 'rb') as pdf_file:
-            email.attach(f'alumno_{alumno.id}.pdf', pdf_file.read(), 'application/pdf')
-        
         email.send()
-        
-        # Eliminar archivo temporal
-        os.remove(pdf_path)
-        
-        messages.success(request, f'PDF enviado exitosamente a {request.user.email}')
+        messages.success(request, f'PDF enviado exitosamente a {request.user.email if request.user.email else alumno.email}')
     except Exception as e:
-        messages.error(request, f'Error al enviar el PDF: {str(e)}')
+        messages.error(request, f'Error al enviar el email: {str(e)}')
     
     return redirect('alumnos:dashboard')
