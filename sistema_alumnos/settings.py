@@ -1,17 +1,17 @@
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 import dj_database_url
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key-change-this')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-local-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -59,6 +59,7 @@ WSGI_APPLICATION = 'sistema_alumnos.wsgi.application'
 
 # Database
 if config('DATABASE_URL', default=None):
+    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
             default=config('DATABASE_URL'),
@@ -110,6 +111,9 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email Configuration
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
