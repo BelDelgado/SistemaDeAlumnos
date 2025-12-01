@@ -134,31 +134,6 @@ Asegúrate de tener los siguientes archivos en tu repositorio:
 
 5. **Deploy**: Render construirá y desplegará automáticamente
 
-## 📦 Estructura del Proyecto
-
-```
-proyecto/
-│
-├── nombre_proyecto/          # Configuración principal
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-│
-├── alumnos/                  # App principal
-│   ├── models.py            # Modelos de base de datos
-│   ├── views.py             # Lógica de vistas
-│   ├── urls.py              # Rutas
-│   ├── forms.py             # Formularios
-│   └── templates/           # Templates HTML
-│
-├── static/                   # Archivos estáticos
-├── media/                    # Archivos subidos
-├── requirements.txt          # Dependencias
-├── build.sh                  # Script de build
-├── .env                      # Variables de entorno (no subir a Git)
-└── manage.py
-```
-
 ## 🔐 Seguridad
 
 - Las contraseñas se almacenan hasheadas con Django
