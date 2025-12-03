@@ -59,3 +59,4 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('accounts:login')
+
