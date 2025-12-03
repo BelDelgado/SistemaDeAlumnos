@@ -4,12 +4,26 @@ from .models import Alumno
 class AlumnoForm(forms.ModelForm):
     class Meta:
         model = Alumno
-        fields = ['nombre', 'apellido', 'email', 'telefono', 'fecha_nacimiento', 'direccion']
+        fields = ['nombre', 'apellido', 'nota']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
-            'apellido': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono'}),
-            'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Nombre'
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Apellido'
+            }),
+            'nota': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Nota (0-10)',
+                'step': '0.01',
+                'min': '0',
+                'max': '10'
+            }),
+        }
+        labels = {
+            'nombre': 'Nombre',
+            'apellido': 'Apellido',
+            'nota': 'Nota',
         }

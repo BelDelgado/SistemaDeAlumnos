@@ -12,10 +12,16 @@
                 </h4>
             </div>
             <div class="card-body">
-                <div class="mb-3">
+                <div class="mb-3 d-flex gap-2 flex-wrap">
                     <a href="{% url 'alumnos:crear_alumno' %}" class="btn btn-success">
                         <i class="bi bi-plus-circle"></i> Agregar Nuevo Alumno
                     </a>
+                    
+                    {% if alumnos %}
+                    <a href="{% url 'alumnos:exportar_csv' %}" class="btn btn-info">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Exportar alumnos a CSV
+                    </a>
+                    {% endif %}
                 </div>
 
                 {% if alumnos %}
@@ -24,37 +30,53 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Teléfono</th>
-                                <th>Fecha de Nacimiento</th>
+                                <th>Apellido</th>
+                                <th>Nota</th>
+                                <th>Fecha de Registro</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for alumno in alumnos %}
                             <tr>
-                                <td><strong>{{ alumno.nombre_completo }}</strong></td>
-                                <td>{{ alumno.email }}</td>
-                                <td>{{ alumno.telefono|default:"No especificado" }}</td>
-                                <td>{{ alumno.fecha_nacimiento|date:"d/m/Y" }}</td>
+                                <td><strong>{{ alumno.nombre }}</strong></td>
+                                <td><strong>{{ alumno.apellido }}</strong></td>
                                 <td>
-                                    <a href="{% url 'alumnos:editar_alumno' alumno.pk %}" 
-                                       class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a href="{% url 'alumnos:eliminar_alumno' alumno.pk %}" 
-                                       class="btn btn-sm btn-danger" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                    <a href="{% url 'alumnos:enviar_pdf' alumno.pk %}" 
-                                       class="btn btn-sm btn-info" title="Enviar PDF">
-                                        <i class="bi bi-file-pdf"></i> PDF
-                                    </a>
+                                    {% if alumno.nota >= 7 %}
+                                        <span class="badge bg-success">{{ alumno.nota }}</span>
+                                    {% elif alumno.nota >= 4 %}
+                                        <span class="badge bg-warning text-dark">{{ alumno.nota }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ alumno.nota }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ alumno.fecha_registro|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'alumnos:editar_alumno' alumno.pk %}" 
+                                           class="btn btn-sm btn-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'alumnos:eliminar_alumno' alumno.pk %}" 
+                                           class="btn btn-sm btn-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        <a href="{% url 'alumnos:generar_pdf_alumno' alumno.pk %}" 
+                                           class="btn btn-sm btn-info" title="Generar PDF">
+                                            <i class="bi bi-file-pdf"></i> PDF
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                
+                <div class="mt-3">
+                    <p class="text-muted">
+                        <i class="bi bi-info-circle"></i> Total de alumnos: <strong>{{ alumnos.count }}</strong>
+                    </p>
                 </div>
                 {% else %}
                 <div class="alert alert-info text-center">
